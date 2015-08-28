@@ -11,6 +11,7 @@
   * неймспейсы моделей
   * мультиязычность
   * репозитории
+  * sequel && ransack
   * querues
   * view models
   * policies
