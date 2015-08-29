@@ -55,7 +55,19 @@ end
  = show_attribute user_presenter, :contacts
 ```
 
- 
+Следующий подход относится к формам:
+
+```
+= simple_form_for @user, builder: PunditFormBuilder do |f|
+  = f.input :name
+  = f.input :email
+  = f.input :role
+  = f.input :contacts, as: :big_textarea
+  = f.input :profile_image, as: :attachment
+ # some other inputs
+```
+
+Я использую gem simple_form для рендеринга форм. Как видите, все получается компактно и понятно 
 
 * представления
   * хэлперы для часто встречающихся операций
