@@ -176,6 +176,13 @@ def present(model)
   presenter
 end
 
+# app/views/web/tasks/index.haml
+- @tasks.each do |task|
+  %tr
+    - present task do |task_presenter|
+      %td= task_presenter.id
+      %td= task_presenter.to_link
+      %td= task_presenter.project
 ```
 
 
