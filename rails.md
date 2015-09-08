@@ -136,6 +136,52 @@ gem drapper внес хорошую путаницу: его разработч�
 Я нашел простой, элегантный и понятный способ реализовать презентеры http://nithinbekal.com/posts/rails-presenters/  
 
 
+```
+# app/presenters/base_presenter.rb
+class BasePresenter < Delegator
+  attr_reader :model, :h
+  alias_method :__getobj__, :model
+
+  def initialize(model, view_context)
+    @model = model
+    @h = view_context
+  end
+
+  def inspect
+    "#<#{self.class} model: #{model.inspect}>"
+  end
+end
+
+# app/presenters/task_presenter.rb
+class TaskPresenter < BasePresenter
+  def to_link
+    h.link_to model.to_s, model
+  end
+
+  def description
+    h.markdown model.description
+  end
+
+  def users
+    model.users.map { |user| h.present user }
+  end
+end
+
+# app/helpers/application_helper.rb
+def present(model)
+  return if model.blank?
+  klass = "#{model.class}Presenter".constantize
+  presenter = klass.new(model, self)
+  yield(presenter) if block_given?
+  presenter
+end
+
+```
+
+
+
+
+
 
 * представления
   * хэлперы для часто встречающихся операций
