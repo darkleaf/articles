@@ -53,13 +53,13 @@ curl -X GET $ES_URL
 
 curl -XPUT "$ES_URL/blog/post/1?pretty" -d'
 {
-   "title": "Веселые котята",
-   "content": "<p>Смешная история про котят<p>",
-   "tags": [
-      "котята",
-      "смешная история"
-   ],
-   "published_at": "2014-09-12T20:44:42+00:00"
+  "title": "Веселые котята",
+  "content": "<p>Смешная история про котят<p>",
+  "tags": [
+    "котята",
+    "смешная история"
+  ],
+  "published_at": "2014-09-12T20:44:42+00:00"
 }'
 
 ```
@@ -193,25 +193,25 @@ curl -XGET "$ES_URL/blog/post/1?_source=title&pretty"
 ```bash
 curl -XPUT "$ES_URL/blog/post/2" -d'
 {
-   "title": "Веселые щенки",
-   "content": "<p>Смешная история про щенков<p>",
-   "tags": [
-      "щенки",
-      "смешная история"
-   ],
-   "published_at": "2014-08-12T20:44:42+00:00"
+  "title": "Веселые щенки",
+  "content": "<p>Смешная история про щенков<p>",
+  "tags": [
+    "щенки",
+    "смешная история"
+  ],
+  "published_at": "2014-08-12T20:44:42+00:00"
 }'
 ```
 
 ```bash
 curl -XPUT "$ES_URL/blog/post/3" -d'
 {
-   "title": "Как у меня появился котенок",
-   "content": "<p>Душераздирающая история про бедного котенка с улицы<p>",
-   "tags": [
-      "котята"
-   ],
-   "published_at": "2014-07-21T20:44:42+00:00"
+  "title": "Как у меня появился котенок",
+  "content": "<p>Душераздирающая история про бедного котенка с улицы<p>",
+  "tags": [
+    "котята"
+  ],
+  "published_at": "2014-07-21T20:44:42+00:00"
 }'
 ```
 
@@ -221,9 +221,9 @@ curl -XPUT "$ES_URL/blog/post/3" -d'
 # найдем последний пост по дате публикации и извлечем поля title и published_at
 curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
-    "size": 1,
-    "_source": ["title", "published_at"],
-    "sort": [{"published_at": "desc"}]
+  "size": 1,
+  "_source": ["title", "published_at"],
+  "sort": [{"published_at": "desc"}]
 }'
 ```
 ```json
@@ -268,11 +268,11 @@ ES с версии 2 не различает фильты и запросы, в�
 # получим посты опубликованные 1ого сентября или позже
 curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
-   "filter": {
-      "range": {
-         "published_at": { "gte": "2014-09-01" }
-      }
-   }
+  "filter": {
+    "range": {
+      "published_at": { "gte": "2014-09-01" }
+    }
+  }
 }'
 ```
 
@@ -284,15 +284,15 @@ curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 # найдем все документы, в поле tags которых есть элемент 'котята'
 curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
-   "_source": [
-      "title",
-      "tags"
-   ],
-   "filter": {
-      "term": {
-         "tags": "котята"
-      }
-   }
+  "_source": [
+    "title",
+    "tags"
+  ],
+  "filter": {
+    "term": {
+      "tags": "котята"
+    }
+  }
 }'
 ```
 
@@ -345,12 +345,12 @@ curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 # source: false означает, что не нужно извлекать _source найденных документов
 curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
-   "_source": false,
-   "query": {
-      "match": {
-         "content": "история"
-      }
-   }
+  "_source": false,
+  "query": {
+    "match": {
+      "content": "история"
+    }
+  }
 }'
 ``` 
 ```json
@@ -537,52 +537,52 @@ curl -XGET "$ES_URL/_analyze?pretty&analyzer=russian&text=%D0%92%D0%B5%D1%81%D0%
 ```bash
 curl -XPOST "$ES_URL/blog2" -d'
 {
-   "settings": {
-      "analysis": {
-         "filter": {
-            "ru_stop": {
-               "type": "stop",
-               "stopwords": "_russian_"
-            },
-            "ru_stemmer": {
-               "type": "stemmer",
-               "language": "russian"
-            }
-         },
-         "analyzer": {
-            "default": {
-               "char_filter": [
-                  "html_strip"
-               ],
-               "tokenizer": "standard",
-               "filter": [
-                  "lowercase",
-                  "ru_stop",
-                  "ru_stemmer"
-               ]
-            }
-         }
+  "settings": {
+    "analysis": {
+      "filter": {
+        "ru_stop": {
+          "type": "stop",
+          "stopwords": "_russian_"
+        },
+        "ru_stemmer": {
+          "type": "stemmer",
+          "language": "russian"
+        }
+      },
+      "analyzer": {
+        "default": {
+          "char_filter": [
+            "html_strip"
+          ],
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "ru_stop",
+            "ru_stemmer"
+          ]
+        }
       }
-   },
-   "mappings": {
-      "post": {
-         "properties": {
-            "content": {
-               "type": "string"
-            },
-            "published_at": {
-               "type": "date"
-            },
-            "tags": {
-               "type": "string",
-               "index": "not_analyzed"
-            },
-            "title": {
-               "type": "string"
-            }
-         }
+    }
+  },
+  "mappings": {
+    "post": {
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "published_at": {
+          "type": "date"
+        },
+        "tags": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "title": {
+          "type": "string"
+        }
       }
-   }
+    }
+  }
 }'
 ```
 
@@ -601,16 +601,16 @@ curl -XPOST "$ES_URL/blog2" -d'
 # приоритет используется при ранжировании результатов
 curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 {
-   "query": {
-      "simple_query_string": {
-         "query": "истории",
-         "fields": [
-            "title^3",
-            "tags^2",
-            "content"
-         ]
-      }
-   }
+  "query": {
+    "simple_query_string": {
+      "query": "истории",
+      "fields": [
+        "title^3",
+        "tags^2",
+        "content"
+      ]
+    }
+  }
 }'
 ```
 
@@ -639,16 +639,16 @@ curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 # найдем документы без слова 'щенки'
 curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 {
-   "query": {
-      "simple_query_string": {
-         "query": "-щенки",
-         "fields": [
-            "title^3",
-            "tags^2",
-            "content"
-         ]
-      }
-   }
+  "query": {
+    "simple_query_string": {
+      "query": "-щенки",
+      "fields": [
+        "title^3",
+        "tags^2",
+        "content"
+      ]
+    }
+  }
 }'
 
 # получим 2 поста про котиков
