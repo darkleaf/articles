@@ -1,21 +1,20 @@
-Это мой урок на Hexlet.io: [Введение в Elasticsearch](http://hexlet.io/lessons/elasticsearch_intro/).
-
-
-Elasticsearch - поисковый движок с json rest api, использующий Lucene и написанный на Java. Описание всех преимуществ этого движка доступно на [официальном сайте](http://www.elasticsearch.org/overview/elasticsearch). Далее по тексту будем называть Elasticsearch как ES.
+Elasticsearch - поисковый движок с json rest api, использующий Lucene и написанный на Java. Описание всех преимуществ этого движка доступно на [официальном сайте](https://www.elastic.co/products/elasticsearch). Далее по тексту будем называть Elasticsearch как ES.
 
 Подобные движки используются при сложном поиске по базе документов. Например, поиск с учетом морфологии языка или поиск по geo координатам.
 
 В этом уроке я расскажу про основы ES на примере индексации постов блога. Покажу как фильтровать, сортировать и искать документы.
 
-Что бы урок был максимально кроссплатформенным все запросы к ES я буду делать с помощью CURL. Так же есть [плагин для google chrome](https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru).
+Что бы урок был максимально кроссплатформенным все запросы к ES я буду делать с помощью CURL. Так же есть плагин для google chrome под названием [sense](https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru)
 
-По тексту урока расставлены ссылки на другие источники. В конце урока размещены ссылки для быстрого доступа к документации. Определения незнакомых терминов можно прочитать в [глоссарии](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html).
+(https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru).
+
+По тексту урока расставлены ссылки на другие источники. В конце урока размещены ссылки для быстрого доступа к документации. Определения незнакомых терминов можно прочитать в [глоссарии](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html).
 
 # Установка ES
 
-Для этого нам сначала потребуется Java. Разработчики [рекомендуют](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup.html#jvm-version) установить версии Java, новее чем Java 8 update 20 или Java 7 update 55. 
+Для этого нам сначала потребуется Java. Разработчики [рекомендуют](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup.html#jvm-version) установить версии Java, новее чем Java 8 update 20 или Java 7 update 55.
 
-Дистрибутив ES доступен на [сайте разработчика](http://www.elasticsearch.org/overview/elkdownloads/). После распаковки архива нужно запустить `bin/elasticsearch`. Так же доступны [пакеты для apt и yum](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/setup-repositories.html). [Подробнее об установке](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/_installation.html).
+Дистрибутив ES доступен на [сайте разработчика](https://www.elastic.co/downloads/elasticsearch). После распаковки архива нужно запустить `bin/elasticsearch`. Так же доступны [пакеты для apt и yum](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html). Есть [официальный image для docker](https://hub.docker.com/_/elasticsearch/). [Подробнее об установке](https://www.elastic.co/guide/en/elasticsearch/reference/current/_installation.html).
 
 После установки и запуска проверим работоспособность:
 
