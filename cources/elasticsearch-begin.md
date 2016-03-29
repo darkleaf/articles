@@ -1,14 +1,14 @@
+Основы ElasticSearch.
+
 Elasticsearch - поисковый движок с json rest api, использующий Lucene и написанный на Java. Описание всех преимуществ этого движка доступно на [официальном сайте](https://www.elastic.co/products/elasticsearch). Далее по тексту будем называть Elasticsearch как ES.
 
 Подобные движки используются при сложном поиске по базе документов. Например, поиск с учетом морфологии языка или поиск по geo координатам.
 
-В этом уроке я расскажу про основы ES на примере индексации постов блога. Покажу как фильтровать, сортировать и искать документы.
+В этой статье я расскажу про основы ES на примере индексации постов блога. Покажу как фильтровать, сортировать и искать документы.
 
-Что бы урок был максимально кроссплатформенным все запросы к ES я буду делать с помощью CURL. Так же есть плагин для google chrome под названием [sense](https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru)
+Что бы не зависить от операционной системы все запросы к ES я буду делать с помощью CURL. Так же есть плагин для google chrome под названием [sense](https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru)
 
-(https://chrome.google.com/webstore/detail/sense-beta/lhjgkmllcaadmopgmanpapmpjgmfcfig?hl=ru).
-
-По тексту урока расставлены ссылки на другие источники. В конце урока размещены ссылки для быстрого доступа к документации. Определения незнакомых терминов можно прочитать в [глоссарии](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html).
+По тексту расставлены ссылки на документацию и другие источники. В конце размещены ссылки для быстрого доступа к документации. Определения незнакомых терминов можно прочитать в [глоссарии](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html).
 
 # Установка ES
 
