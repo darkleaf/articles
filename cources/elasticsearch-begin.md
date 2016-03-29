@@ -219,7 +219,7 @@ curl -XPUT "$ES_HOST:9200/blog/post/3" -d'
 
 ```bash
 # найдем последний пост по дате публикации и извлечем поля title и published_at
-curl -XGET "$ES_HOST:9200/blog/post/_search" -d'
+curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 {
     "size": 1,
     "_source": ["title", "published_at"],
@@ -228,52 +228,49 @@ curl -XGET "$ES_HOST:9200/blog/post/_search" -d'
 ```
 ```json
 {
-   "took": 2,
-   "timed_out": false,
-   "_shards": {
-      "total": 5,
-      "successful": 5,
-      "failed": 0
-   },
-   "hits": {
-      "total": 3,
-      "max_score": null,
-      "hits": [
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "1",
-            "_score": null,
-            "_source": {
-               "title": "Веселые котята",
-               "published_at": "2014-09-12T20:44:42+00:00"
-            },
-            "sort": [
-               1410554682000
-            ]
-         }
-      ]
-   }
+  "took" : 8,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 3,
+    "max_score" : null,
+    "hits" : [ {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "1",
+      "_score" : null,
+      "_source" : {
+        "title" : "Веселые котята",
+        "published_at" : "2014-09-12T20:44:42+00:00"
+      },
+      "sort" : [ 1410554682000 ]
+    } ]
+  }
 }
 ```
 
-Мы выбрали последний пост. `size` ограничивает кол-во документов в выдаче. `total` показывает общее число документов, подходящих под запрос.  `sort` в выдаче содержит массив целых чисел по которым производится сортировка. Т.е. дата преобразовалась в целое число. Подробнее о сортировке можно прочитать в [документации](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-request-sort.html#search-request-sort).
+Мы выбрали последний пост. `size` ограничивает кол-во документов в выдаче. `total` показывает общее число документов, подходящих под запрос.  `sort` в выдаче содержит массив целых чисел по которым производится сортировка. Т.е. дата преобразовалась в целое число. Подробнее о сортировке можно прочитать в [документации](https://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-sort.html#search-request-sort).
+
+## Фильтры и запросы
+
+ES с версии 2 не различает фильты и запросы, вместо этого [вводится понятие контекстов](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-filter-context.html).
+Контекст запроса отличается от контекста фильтра тем, что запрос генерирует _score и не кэшируется. Что такое _score я покажу позже.
 
 ## Фильтрация по дате
 
-Используем фильтр [range](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-range-filter.html):
+Используем запрос [range](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-range-query.html) в контексте filter:
 
 ```bash
 # получим посты опубликованные 1ого сентября или позже
-curl -XGET "http://localhost:9200/blog/post/_search" -d'
+curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 {
-   "query": {
-      "filtered": {
-         "filter": {
-            "range": {
-               "published_at": { "gte": "2014-09-01" }
-            }
-         }
+   "filter": {
+      "range": {
+         "published_at": { "gte": "2014-09-01" }
       }
    }
 }'
@@ -281,23 +278,19 @@ curl -XGET "http://localhost:9200/blog/post/_search" -d'
 
 ## Фильтрация по тегам
 
-Используем [term filter](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-term-filter.html) для поиска id документов, содержащих заданное слово:
+Используем [term query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html) для поиска id документов, содержащих заданное слово:
 
 ```bash
 # найдем все документы, в поле tags которых есть элемент 'котята'
-curl -XGET "http://localhost:9200/blog/post/_search" -d'
+curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 {
    "_source": [
       "title",
       "tags"
    ],
-   "query": {
-      "filtered": {
-         "filter": {
-            "term": {
-               "tags": "котята"
-            }
-         }
+   "filter": {
+      "term": {
+         "tags": "котята"
       }
    }
 }'
@@ -305,44 +298,36 @@ curl -XGET "http://localhost:9200/blog/post/_search" -d'
 
 ```json
 {
-   "took": 4,
-   "timed_out": false,
-   "_shards": {
-      "total": 5,
-      "successful": 5,
-      "failed": 0
-   },
-   "hits": {
-      "total": 2,
-      "max_score": 1,
-      "hits": [
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "3",
-            "_score": 1,
-            "_source": {
-               "tags": [
-                  "котята"
-               ],
-               "title": "Как у меня появился котенок"
-            }
-         },
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "1",
-            "_score": 1,
-            "_source": {
-               "tags": [
-                  "котята",
-                  "смешная история"
-               ],
-               "title": "Веселые котята"
-            }
-         }
-      ]
-   }
+  "took" : 9,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 2,
+    "max_score" : 1.0,
+    "hits" : [ {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "1",
+      "_score" : 1.0,
+      "_source" : {
+        "title" : "Веселые котята",
+        "tags" : [ "котята", "смешная история" ]
+      }
+    }, {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "3",
+      "_score" : 1.0,
+      "_source" : {
+        "title" : "Как у меня появился котенок",
+        "tags" : [ "котята" ]
+      }
+    } ]
+  }
 }
 ```
 
@@ -352,13 +337,13 @@ curl -XGET "http://localhost:9200/blog/post/_search" -d'
 
 * `<p>Смешная история про котят<p>`
 * `<p>Смешная история про щенков<p>`
-* `<p>душераздирающая история про бедного котенка с улицы<p>`
+* `<p>Душераздирающая история про бедного котенка с улицы<p>`
 
-Используем [query match](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-match-query.html) для поиска id документов, содержащих заданное слово:
+Используем [match query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html) для поиска id документов, содержащих заданное слово:
 
 ```bash
 # source: false означает, что не нужно извлекать _source найденных документов
-curl -XGET "http://localhost:9200/blog/post/_search" -d'
+curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 {
    "_source": false,
    "query": {
@@ -370,119 +355,109 @@ curl -XGET "http://localhost:9200/blog/post/_search" -d'
 ``` 
 ```json
 {
-   "took": 7,
-   "timed_out": false,
-   "_shards": {
-      "total": 5,
-      "successful": 5,
-      "failed": 0
-   },
-   "hits": {
-      "total": 3,
-      "max_score": 0.11506981,
-      "hits": [
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "1",
-            "_score": 0.11506981
-         },
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "2",
-            "_score": 0.11506981
-         },
-         {
-            "_index": "blog",
-            "_type": "post",
-            "_id": "3",
-            "_score": 0.095891505
-         }
-      ]
-   }
+  "took" : 13,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 3,
+    "max_score" : 0.11506981,
+    "hits" : [ {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "2",
+      "_score" : 0.11506981
+    }, {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "1",
+      "_score" : 0.11506981
+    }, {
+      "_index" : "blog",
+      "_type" : "post",
+      "_id" : "3",
+      "_score" : 0.095891505
+    } ]
+  }
 }
 ```
 
 Однако, если искать "истории" в поле контент, то мы ничего не найдем, т.к. в индексе содержатся только оригинальные слова, а не их основы. Для того, что бы сделать качественный поиск нужно настроить анализатор.
 
+Поле `_score` показывает [релевантность](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html). Если запрос выпоняется в filter context, то значение _score всегда будет равно 1, что означает полное соответствие фильтру.
+
 # Анализаторы
 
-[Анализаторы](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis.html) нужны, что бы преобразовать исходный текст в набор токенов.
-Анализаторы состоят из одного [Tokenizer](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-tokenizers.html) и нескольких необязательных [TokenFilters](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-tokenfilters.html). Tokenizer может предшествовать нескольким [CharFilters](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-charfilters.html). Tokenizer разбивают исходную строку на токены, например по пробелам и символам пунктуации. TokenFilter может изменять токены, удалять или добавлять новые, например оставлять только основу слова, убирать предлоги, добавлять синонимы. CharFilter - изменяет исходную строку целиком, например вырезает html теги.
+[Анализаторы](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html) нужны, что бы преобразовать исходный текст в набор токенов.
+Анализаторы состоят из одного [Tokenizer](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenizers.html) и нескольких необязательных [TokenFilters](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-tokenfilters.html). Tokenizer может предшествовать нескольким [CharFilters](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-charfilters.html). Tokenizer разбивают исходную строку на токены, например по пробелам и символам пунктуации. TokenFilter может изменять токены, удалять или добавлять новые, например оставлять только основу слова, убирать предлоги, добавлять синонимы. CharFilter - изменяет исходную строку целиком, например вырезает html теги.
 
-В ES есть несколько [стандартных анализаторов](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-analyzers.html). Например анализатор [russian](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html#russian-analyzer)
+В ES есть несколько [стандартных анализаторов](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-analyzers.html). Например анализатор [russian](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html#russian-analyzer).
 
 Воспользуемся [api](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-analyze.html) и посмотрим как анализаторы standard и russian преобразуют строку "Веселые истории про котят": 
 
 ```bash
-# используем анализатор standard
-curl -XGET "http://localhost:9200/_analyze?analyzer=standard&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
+# используем анализатор standard       
+# обязательно нужно перекодировать не ASCII символы
+curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=standard&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
 ```
 ```json
 {
-   "tokens": [
-      {
-         "token": "веселые",
-         "start_offset": 0,
-         "end_offset": 7,
-         "type": "<ALPHANUM>",
-         "position": 1
-      },
-      {
-         "token": "истории",
-         "start_offset": 8,
-         "end_offset": 15,
-         "type": "<ALPHANUM>",
-         "position": 2
-      },
-      {
-         "token": "про",
-         "start_offset": 16,
-         "end_offset": 19,
-         "type": "<ALPHANUM>",
-         "position": 3
-      },
-      {
-         "token": "котят",
-         "start_offset": 20,
-         "end_offset": 25,
-         "type": "<ALPHANUM>",
-         "position": 4
-      }
-   ]
+  "tokens" : [ {
+    "token" : "веселые",
+    "start_offset" : 0,
+    "end_offset" : 7,
+    "type" : "<ALPHANUM>",
+    "position" : 0
+  }, {
+    "token" : "истории",
+    "start_offset" : 8,
+    "end_offset" : 15,
+    "type" : "<ALPHANUM>",
+    "position" : 1
+  }, {
+    "token" : "про",
+    "start_offset" : 16,
+    "end_offset" : 19,
+    "type" : "<ALPHANUM>",
+    "position" : 2
+  }, {
+    "token" : "котят",
+    "start_offset" : 20,
+    "end_offset" : 25,
+    "type" : "<ALPHANUM>",
+    "position" : 3
+  } ]
 }
 ```
 
 ```bash
 # используем анализатор russian
-curl -XGET "http://localhost:9200/_analyze?analyzer=russian&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
+curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=russian&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
 ```
 ```json
 {
-   "tokens": [
-      {
-         "token": "весел",
-         "start_offset": 0,
-         "end_offset": 7,
-         "type": "<ALPHANUM>",
-         "position": 1
-      },
-      {
-         "token": "истор",
-         "start_offset": 8,
-         "end_offset": 15,
-         "type": "<ALPHANUM>",
-         "position": 2
-      },
-      {
-         "token": "кот",
-         "start_offset": 20,
-         "end_offset": 25,
-         "type": "<ALPHANUM>",
-         "position": 4
-      }
-   ]
+  "tokens" : [ {
+    "token" : "весел",
+    "start_offset" : 0,
+    "end_offset" : 7,
+    "type" : "<ALPHANUM>",
+    "position" : 0
+  }, {
+    "token" : "истор",
+    "start_offset" : 8,
+    "end_offset" : 15,
+    "type" : "<ALPHANUM>",
+    "position" : 1
+  }, {
+    "token" : "кот",
+    "start_offset" : 20,
+    "end_offset" : 25,
+    "type" : "<ALPHANUM>",
+    "position" : 3
+  } ]
 }
 ```
 
@@ -560,7 +535,7 @@ curl -XGET "http://localhost:9200/_analyze?analyzer=russian&text=%D0%92%D0%B5%D1
 Создадим индекс blog2 с анализатором и маппингом, в котором отключен анализ поля tags:
 
 ```bash
-curl -XPOST "http://localhost:9200/blog2" -d'
+curl -XPOST "$ES_HOST:9200/blog2" -d'
 {
    "settings": {
       "analysis": {
@@ -596,8 +571,7 @@ curl -XPOST "http://localhost:9200/blog2" -d'
                "type": "string"
             },
             "published_at": {
-               "type": "date",
-               "format": "dateOptionalTime"
+               "type": "date"
             },
             "tags": {
                "type": "string",
@@ -625,7 +599,7 @@ curl -XPOST "http://localhost:9200/blog2" -d'
 # поле tags имеет приоритет 2
 # поле content имеет приоритет 1
 # приоритет используется при ранжировании результатов
-curl -XPOST "http://localhost:9200/blog2/post/_search" -d'
+curl -XPOST "$ES_HOST:9200/blog2/post/_search?pretty" -d'
 {
    "query": {
       "simple_query_string": {
@@ -663,7 +637,7 @@ curl -XPOST "http://localhost:9200/blog2/post/_search" -d'
 
 ```bash
 # найдем документы без слова 'щенки'
-curl -XPOST "http://localhost:9200/blog2/post/_search" -d'
+curl -XPOST "$ES_HOST:9200/blog2/post/_search?pretty" -d'
 {
    "query": {
       "simple_query_string": {
@@ -682,11 +656,11 @@ curl -XPOST "http://localhost:9200/blog2/post/_search" -d'
 
 # Ссылки
 
-* [Elasticsearch](http://www.elasticsearch.org/)
-* [документация](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/index.html)
-* [глоссарий](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html)
-* [установка](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/_installation.html)
-* [манипуляции с документами](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs.html)
-* [операции с индексами](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices.html)
-* [список запросов](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-queries.html)
-* [список фильтров](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-filters.html)
+* [Elasctic.co](https://www.elastic.co)
+* [Reference](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html)
+* [Guide](https://www.elastic.co/guide/en/elasticsearch/guide/current/index.html)
+* [Глоссарий](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html)
+* [Установка](https://www.elastic.co/guide/en/elasticsearch/reference/current/_installation.html)
+* [Манипуляции с документами](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html)
+* [Операции с индексами](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html)
+* [Список запросов](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
