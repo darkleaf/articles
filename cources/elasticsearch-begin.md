@@ -19,21 +19,25 @@ Elasticsearch - поисковый движок с json rest api, использ
 После установки и запуска проверим работоспособность:
 
 ```bash
-curl -X GET http://localhost:9200/
+# для удобства запомним адрес хоста в переменную
+#export ES_HOST=$(docker-machine ip dev)
+export ES_HOST=localhost
+
+curl -X GET $ES_HOST:9200
 ```
 
 Нам придет приблизительно такой ответ:
 
 ```json
 {
-  "status" : 200,
-  "name" : "Thunderball",
+  "name" : "Heimdall",
+  "cluster_name" : "elasticsearch",
   "version" : {
-    "number" : "1.3.2",
-    "build_hash" : "dee175dbe2f254f3f26992f5d7591939aaefd12f",
-    "build_timestamp" : "2014-08-13T14:29:30Z",
+    "number" : "2.2.1",
+    "build_hash" : "d045fc29d1932bce18b2e65ab8b297fbf6cd41a1",
+    "build_timestamp" : "2016-03-09T09:38:54Z",
     "build_snapshot" : false,
-    "lucene_version" : "4.9"
+    "lucene_version" : "5.4.1"
   },
   "tagline" : "You Know, for Search"
 }
@@ -44,10 +48,10 @@ curl -X GET http://localhost:9200/
 Добавим пост в ES:
 
 ```bash
-# Добавим документ c id 1 типа post в индекс blog
-# curl -XPUT "http://localhost:9200/INDEX/TYPE/ID" -d'
+# Добавим документ c id 1 типа post в индекс blog.
+# ?pretty указывает, что вывод должен быть человеко-читаемым.
 
-curl -XPUT "http://localhost:9200/blog/post/1" -d'
+curl -XPUT $ES_HOST:9200/blog/post/1?pretty -d'
 {
    "title": "Веселые котята",
    "content": "<p>Смешная история про котят<p>",
@@ -57,64 +61,67 @@ curl -XPUT "http://localhost:9200/blog/post/1" -d'
    ],
    "published_at": "2014-09-12T20:44:42+00:00"
 }'
+
 ```
 
 ответ сервера:
 
 ```json
 {
-   "_index": "blog",
-   "_type": "post",
-   "_id": "1",
-   "_version": 1,
-   "created": true
+  "_index" : "blog",
+  "_type" : "post",
+  "_id" : "1",
+  "_version" : 1,
+  "_shards" : {
+    "total" : 2,
+    "successful" : 1,
+    "failed" : 0
+  },
+  "created" : false
 }
+
 ```
 
-ES автоматически создал [индекс](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html#glossary-index) blog и [тип](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html#glossary-type) post. Индекс можно понимать как базу данных в реляционной СУБД, а тип - как таблицу в этой базе. Каждый тип имеет свою схему - [mapping](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html#glossary-mapping), так же как и реляционная таблица. Mapping генерируется автоматически при индексации документа:
+ES автоматически создал [индекс](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html#glossary-index) blog и [тип](https://www.elastic.co/guide/en/elasticsearch/reference/current/glossary.html#glossary-type) post. Можно провести условную аналогию: индекс - это база данных, а тип - таблица в этой БД. Каждый тип имеет свою схему - [mapping](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/glossary.html#glossary-mapping), так же как и реляционная таблица. Mapping генерируется автоматически при индексации документа:
 
 ```bash
 # Получим mapping всех типов индекса blog
-curl -XGET "http://localhost:9200/blog/_mapping"
+curl -XGET $ES_HOST:9200/blog/_mapping?pretty
 ```
 
-В ответе сервера я добавил в комментариях значения полей документа:
+В ответе сервера я добавил в комментариях значения полей проиндексированного документа:
 
 ```json
 {
-   "blog": {
-      "mappings": {
-         "post": {
-            "properties": {
-            
-               /* "content": "<p>Смешная история про котят<p>", */
-               "content": {
-                  "type": "string"
-               },
-               
-               /* "published_at": "2014-09-12T20:44:42+00:00" */
-               "published_at": {
-                  "type": "date",
-                  "format": "dateOptionalTime"
-               },
-               
-			   /* "tags": ["котята", "смешная история"] */
-               "tags": {
-                  "type": "string"
-               },
-               
-               /*  "title": "Веселые котята" */
-               "title": {
-                  "type": "string"
-               }
-            }
-         }
+  "blog" : {
+    "mappings" : {
+      "post" : {
+        "properties" : {
+          /* "content": "<p>Смешная история про котят<p>", */ 
+          "content" : {
+            "type" : "string"
+          },
+          /* "published_at": "2014-09-12T20:44:42+00:00" */
+          "published_at" : {
+            "type" : "date",
+            "format" : "strict_date_optional_time||epoch_millis"
+          },
+          /* "tags": ["котята", "смешная история"] */
+          "tags" : {
+            "type" : "string"
+          },
+          /*  "title": "Веселые котята" */
+          "title" : {
+            "type" : "string"
+          }
+        }
       }
-   }
+    }
+  }
 }
 ```
 
-Стоит отметить, что ES не делает различий между одиночным значением и массивом значений. Например, поле title содержит просто заголовок, а поле tags - массив строк, хотя они представлены в маппинге одинаково.
+Стоит отметить, что ES не делает различий между одиночным значением и массивом значений. Например, поле title содержит просто заголовок, а поле tags - массив строк, хотя они представлены в mapping одинаково.
 Позднее мы поговорим о маппинге более подобно.
 
 # Запросы
@@ -123,73 +130,68 @@ curl -XGET "http://localhost:9200/blog/_mapping"
 
 ```bash
 # извлечем документ с id 1 типа post из индекса blog
-curl -XGET "http://localhost:9200/blog/post/1"
+curl -XGET $ES_HOST:9200/blog/post/1?pretty
 ```
 ```json
 {
-   "_index": "blog",
-   "_type": "post",
-   "_id": "1",
-   "_version": 1,
-   "found": true,
-   "_source": {
-      "title": "Веселые котята",
-      "content": "<p>Смешная история про котят<p>",
-      "tags": [
-         "котята",
-         "смешная история"
-      ],
-      "published_at": "2014-09-12T20:44:42+00:00"
-   }
+  "_index" : "blog",
+  "_type" : "post",
+  "_id" : "1",
+  "_version" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "Веселые котята",
+    "content" : "<p>Смешная история про котят<p>",
+    "tags" : [ "котята", "смешная история" ],
+    "published_at" : "2014-09-12T20:44:42+00:00"
+  }
 }
 ```
 
-В ответе появились новые ключи: `_version` и `_source`. Вообще, все ключи, начинающиеся с `_`относятся к служебным.
+В ответе появились новые ключи: `_version` и `_source`. Вообще, все ключи, начинающиеся с `_` относятся к служебным.
 
 Ключ `_version` показывает версию документа. С ее помощью работает механизм оптимистических блокировок. Например,  мы хотим изменить документ, имеющего версию 1. Мы отправляем измененный документ и указываем, что это правка документа с  версией 1. Если кто-то другой тоже редактировал документ с версией 1 и отправил изменения раньше нас, то ES не примет наши изменения, т.к. он хранит документ с версией 2. 
 
-Ключ `_source` содержит тот документ, который мы индексировали. ES не использует это значение для поисковых операций, т.к. для поиска используются индексы. Для экономии места ES хранит сжатый исходный документ. Если нам нужен только id, а не весь исходный документ, то можно отказаться от хранения исходника.
+Ключ `_source` содержит тот документ, который мы индексировали. ES не использует это значение для поисковых операций, т.к. для поиска используются индексы. Для экономии места ES хранит сжатый исходный документ. Если нам нужен только id, а не весь исходный документ, то можно отключить хранение исходника.
 
 Если нам не нужна дополнительная информация можно получить только содержимое _source:
 
 ```bash
-curl -XGET "http://localhost:9200/blog/post/1/_source"
+curl -XGET $ES_HOST:9200/blog/post/1/_source?pretty
 ```
 ```json
 {
-   "title": "Веселые котята",
-   "content": "<p>Смешная история про котят<p>",
-   "tags": [
-      "котята",
-      "смешная история"
-   ],
-   "published_at": "2014-09-12T20:44:42+00:00"
+  "title" : "Веселые котята",
+  "content" : "<p>Смешная история про котят<p>",
+  "tags" : [ "котята", "смешная история" ],
+  "published_at" : "2014-09-12T20:44:42+00:00"
 }
+
 ```
 
 Так же можно выбрать только определенные поля:
 
 ```bash
 # извлечем только поле title
-curl -XGET "http://localhost:9200/blog/post/1?_source=title"
+curl -XGET "$ES_HOST:9200/blog/post/1?_source=title&pretty"
 ```
 ```json
 {
-   "_index": "blog",
-   "_type": "post",
-   "_id": "1",
-   "_version": 1,
-   "found": true,
-   "_source": {
-      "title": "Веселые котята"
-   }
+  "_index" : "blog",
+  "_type" : "post",
+  "_id" : "1",
+  "_version" : 1,
+  "found" : true,
+  "_source" : {
+    "title" : "Веселые котята"
+  }
 }
 ```
 
 Давайте проиндексируем еще несколько постов и выполним более сложные запросы.
 
 ```bash
-curl -XPUT "http://localhost:9200/blog/post/2" -d'
+curl -XPUT "$ES_HOST:9200/blog/post/2" -d'
 {
    "title": "Веселые щенки",
    "content": "<p>Смешная история про щенков<p>",
@@ -202,10 +204,10 @@ curl -XPUT "http://localhost:9200/blog/post/2" -d'
 ```
 
 ```bash
-curl -XPUT "http://localhost:9200/blog/post/3" -d'
+curl -XPUT "$ES_HOST:9200/blog/post/3" -d'
 {
    "title": "Как у меня появился котенок",
-   "content": "<p>душераздирающая история про бедного котенка с улицы<p>",
+   "content": "<p>Душераздирающая история про бедного котенка с улицы<p>",
    "tags": [
       "котята"
    ],
@@ -217,7 +219,7 @@ curl -XPUT "http://localhost:9200/blog/post/3" -d'
 
 ```bash
 # найдем последний пост по дате публикации и извлечем поля title и published_at
-curl -XGET "http://localhost:9200/blog/post/_search" -d'
+curl -XGET "$ES_HOST:9200/blog/post/_search" -d'
 {
     "size": 1,
     "_source": ["title", "published_at"],
