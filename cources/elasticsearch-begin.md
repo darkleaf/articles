@@ -19,11 +19,11 @@ Elasticsearch - поисковый движок с json rest api, использ
 После установки и запуска проверим работоспособность:
 
 ```bash
-# для удобства запомним адрес хоста в переменную
-#export ES_HOST=$(docker-machine ip dev)
-export ES_HOST=localhost
+# для удобства запомним адрес в переменную
+#export ES_URL=$(docker-machine ip dev):9200
+export ES_URL=localhost:9200
 
-curl -X GET $ES_HOST:9200
+curl -X GET $ES_URL
 ```
 
 Нам придет приблизительно такой ответ:
@@ -51,7 +51,7 @@ curl -X GET $ES_HOST:9200
 # Добавим документ c id 1 типа post в индекс blog.
 # ?pretty указывает, что вывод должен быть человеко-читаемым.
 
-curl -XPUT $ES_HOST:9200/blog/post/1?pretty -d'
+curl -XPUT "$ES_URL/blog/post/1?pretty" -d'
 {
    "title": "Веселые котята",
    "content": "<p>Смешная история про котят<p>",
@@ -86,7 +86,7 @@ ES автоматически создал [индекс](https://www.elastic.co
 
 ```bash
 # Получим mapping всех типов индекса blog
-curl -XGET $ES_HOST:9200/blog/_mapping?pretty
+curl -XGET "$ES_URL/blog/_mapping?pretty"
 ```
 
 В ответе сервера я добавил в комментариях значения полей проиндексированного документа:
@@ -130,7 +130,7 @@ curl -XGET $ES_HOST:9200/blog/_mapping?pretty
 
 ```bash
 # извлечем документ с id 1 типа post из индекса blog
-curl -XGET $ES_HOST:9200/blog/post/1?pretty
+curl -XGET "$ES_URL/blog/post/1?pretty"
 ```
 ```json
 {
@@ -157,7 +157,7 @@ curl -XGET $ES_HOST:9200/blog/post/1?pretty
 Если нам не нужна дополнительная информация можно получить только содержимое _source:
 
 ```bash
-curl -XGET $ES_HOST:9200/blog/post/1/_source?pretty
+curl -XGET "$ES_URL/blog/post/1/_source?pretty"
 ```
 ```json
 {
@@ -173,7 +173,7 @@ curl -XGET $ES_HOST:9200/blog/post/1/_source?pretty
 
 ```bash
 # извлечем только поле title
-curl -XGET "$ES_HOST:9200/blog/post/1?_source=title&pretty"
+curl -XGET "$ES_URL/blog/post/1?_source=title&pretty"
 ```
 ```json
 {
@@ -191,7 +191,7 @@ curl -XGET "$ES_HOST:9200/blog/post/1?_source=title&pretty"
 Давайте проиндексируем еще несколько постов и выполним более сложные запросы.
 
 ```bash
-curl -XPUT "$ES_HOST:9200/blog/post/2" -d'
+curl -XPUT "$ES_URL/blog/post/2" -d'
 {
    "title": "Веселые щенки",
    "content": "<p>Смешная история про щенков<p>",
@@ -204,7 +204,7 @@ curl -XPUT "$ES_HOST:9200/blog/post/2" -d'
 ```
 
 ```bash
-curl -XPUT "$ES_HOST:9200/blog/post/3" -d'
+curl -XPUT "$ES_URL/blog/post/3" -d'
 {
    "title": "Как у меня появился котенок",
    "content": "<p>Душераздирающая история про бедного котенка с улицы<p>",
@@ -219,7 +219,7 @@ curl -XPUT "$ES_HOST:9200/blog/post/3" -d'
 
 ```bash
 # найдем последний пост по дате публикации и извлечем поля title и published_at
-curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
+curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
     "size": 1,
     "_source": ["title", "published_at"],
@@ -266,7 +266,7 @@ ES с версии 2 не различает фильты и запросы, в�
 
 ```bash
 # получим посты опубликованные 1ого сентября или позже
-curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
+curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
    "filter": {
       "range": {
@@ -282,7 +282,7 @@ curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 
 ```bash
 # найдем все документы, в поле tags которых есть элемент 'котята'
-curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
+curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
    "_source": [
       "title",
@@ -343,7 +343,7 @@ curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 
 ```bash
 # source: false означает, что не нужно извлекать _source найденных документов
-curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
+curl -XGET "$ES_URL/blog/post/_search?pretty" -d'
 {
    "_source": false,
    "query": {
@@ -401,7 +401,7 @@ curl -XGET "$ES_HOST:9200/blog/post/_search?pretty" -d'
 ```bash
 # используем анализатор standard       
 # обязательно нужно перекодировать не ASCII символы
-curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=standard&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
+curl -XGET "$ES_URL/_analyze?pretty&analyzer=standard&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
 ```
 ```json
 {
@@ -435,7 +435,7 @@ curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=standard&text=%D0%92%D0%B5%D1
 
 ```bash
 # используем анализатор russian
-curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=russian&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
+curl -XGET "$ES_URL/_analyze?pretty&analyzer=russian&text=%D0%92%D0%B5%D1%81%D0%B5%D0%BB%D1%8B%D0%B5%20%D0%B8%D1%81%D1%82%D0%BE%D1%80%D0%B8%D0%B8%20%D0%BF%D1%80%D0%BE%20%D0%BA%D0%BE%D1%82%D1%8F%D1%82"
 ```
 ```json
 {
@@ -535,7 +535,7 @@ curl -XGET "$ES_HOST:9200/_analyze?pretty&analyzer=russian&text=%D0%92%D0%B5%D1%
 Создадим индекс blog2 с анализатором и маппингом, в котором отключен анализ поля tags:
 
 ```bash
-curl -XPOST "$ES_HOST:9200/blog2" -d'
+curl -XPOST "$ES_URL/blog2" -d'
 {
    "settings": {
       "analysis": {
@@ -599,7 +599,7 @@ curl -XPOST "$ES_HOST:9200/blog2" -d'
 # поле tags имеет приоритет 2
 # поле content имеет приоритет 1
 # приоритет используется при ранжировании результатов
-curl -XPOST "$ES_HOST:9200/blog2/post/_search?pretty" -d'
+curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 {
    "query": {
       "simple_query_string": {
@@ -637,7 +637,7 @@ curl -XPOST "$ES_HOST:9200/blog2/post/_search?pretty" -d'
 
 ```bash
 # найдем документы без слова 'щенки'
-curl -XPOST "$ES_HOST:9200/blog2/post/_search?pretty" -d'
+curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 {
    "query": {
       "simple_query_string": {
