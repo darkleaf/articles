@@ -664,3 +664,7 @@ curl -XPOST "$ES_URL/blog2/post/_search?pretty" -d'
 * [Манипуляции с документами](https://www.elastic.co/guide/en/elasticsearch/reference/current/docs.html)
 * [Операции с индексами](https://www.elastic.co/guide/en/elasticsearch/reference/current/indices.html)
 * [Список запросов](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html)
+
+# PS
+
+Если интересны подобные статьи-уроки, есть идеи новых статей или есть предложения о сотрудничестве, то буду рад сообщению в личку или на почту m.kuzmin+habr@darkleaf.ru.
