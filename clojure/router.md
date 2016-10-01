@@ -33,4 +33,31 @@
 
 Итак, используйте REST для огранизации url.
 
+Для того, что бы разобраться с оставшимися двумя пунктами, я покажу примеры кода с помощью своей библиотеки [darkleaf/router](https://github.com/darkleaf/router/). Т.к. это экосистема clojure, то, разумеется, это ring-совместимый роутинг.
+
+```clojure
+(def pages-controller
+  {:middleware (fn [handler] (fn [req] req))
+   :member-middleware some-middleware
+   :index (fn [req] some-ring-response)
+   :show (fn [req] some-ring-response)})
+
+(def routes
+  (build-routes
+   (resources :pages 'page-id pages-controller)))
+
+(def handler (build-handler routes))
+(def request-for (build-request-for routes))
+
+(handler {:uri "/pages", :request-method :get}) ;; call index action from pages-controller
+(request-for :index [:pages]) ;; returns {:uri "/pages", :request-method :get}
+
+(handler {:uri "/pages/1", :request-method :get}) ;; call show action from pages-controller
+(request-for :show [:pages] {:page-id "1"}) ;; returns {:uri "/pages/1", :request-method :get}
+```
+
+
+
+
+Библиотка использует внутри `core.match` и довольно занятные макросы. Но это уже тема отдельной статьи. Пишите в комментариях, если вам интересно почитать про то, как это работает внутри. 
 
