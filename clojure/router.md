@@ -36,9 +36,12 @@
 Для того, что бы разобраться с оставшимися двумя пунктами, я покажу примеры кода с помощью своей библиотеки [darkleaf/router](https://github.com/darkleaf/router/). Т.к. это экосистема clojure, то, разумеется, это ring-совместимый роутинг.
 
 ```clojure
+(ns hello-world.core
+  (:require [darkleaf.router :refer :all]))
+  
 (def pages-controller
   {:middleware (fn [handler] (fn [req] req))
-   :member-middleware some-middleware
+   :member-middleware some-other-middleware
    :index (fn [req] some-ring-response)
    :show (fn [req] some-ring-response)})
 
@@ -56,6 +59,14 @@
 (request-for :show [:pages] {:page-id "1"}) ;; returns {:uri "/pages/1", :request-method :get}
 ```
 
+Здесь, подобно rails, объявляется контролер. В данном случае с двумя экшенами: index и show.
+Контроллер это всего лишь map, и вы можете, например генерировать похожие контроллеры с помощью вашей функции.
+Котнтроллер может содержать только следующие ключи:
+
+* :middleware - middleware которая оборачивает все экшены контроллера, включая обработчики вложенных роутов
+* :member-middleware - оборачивает только member actions и обработчики вложенных роутов, помеченные как member
+* collection actions: :index, :new, :create
+* member actions: :show, :edit, :update, :destroy
 
 
 
