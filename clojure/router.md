@@ -68,7 +68,48 @@
 * collection actions: :index, :new, :create
 * member actions: :show, :edit, :update, :destroy
 
+Вот полный пример для ресурса:
 
+```clojure
+(resources :pages 'page-id {:index identity
+                            :new identity
+                            :create identity
+                            :show identity
+                            :edit identity
+                            :update identity
+                            :destroy identity}
+           :collection
+           [(action :archived identity)]
+           :member
+           [(resources :comments 'comment-id {:index identity})])
+```
+Первым аргуменом указывается имя ресурсов, им же задается сегмент в url. Вторым параметром задается название идентификатора ресурса.
+
+Как я упоминал выше, ресурсы могут включать в себя вложенные роуты двух типов: collection и member.
+
+```clojure
+;; pages collection routes
+(request-for :archived [:pages] {}) ;; #=> {:uri "/pages/archived", :request-method :get}
+
+;; pages member routes
+(request-for :index [:pages :comments] {:page-id "some-id"}) ;; #=> {:uri "/pages/some-id/comments", :request-method :get}
+```
+
+Кроме функции-генератора роутов resources, есть так же: root, action, wildcard, not-found, scope, guard, resource. 
+Я не буду на них останавливаться, подробные примеры их использования вы найдете в [тестах](https://github.com/darkleaf/router/blob/master/test/darkleaf/router_test.clj).
+
+Как вы уже заметили `request-for` возвращает структуру запроса целиком, а не только uri, в отличие от рельсовых хэлперов.
+Это полезно, когда для определения обработчика используются заголовки или другие параметры запроса, например, host.
+В следующих релизах планирутеся поддержка clojurescript и вы можете использовать тот же request-for для посроения запросов к бэкенду.
+     
+Библиотека поделена на 2 неймспейса: darkleaf.router и darkleaf.router.low-level.
+Если у вас какие-то специфические требования к роутингу или вы поддерживаете старую схему url, 
+то вы можете написать свои функции поверх darkleaf.router.low-level, точно так же как это сделано в darkleaf.router.
+
+Полные примеры использования вы найдете в тестах 
+[darkleaf.router](https://github.com/darkleaf/router/blob/master/test/darkleaf/router_test.clj)
+и
+[darkleaf.router.low-level](https://github.com/darkleaf/router/blob/master/test/darkleaf/router/low_level_test.clj).
 
 Библиотка использует внутри `core.match` и довольно занятные макросы. Но это уже тема отдельной статьи. Пишите в комментариях, если вам интересно почитать про то, как это работает внутри. 
 
