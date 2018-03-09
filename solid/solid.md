@@ -1,4 +1,4 @@
-https://habrahabr.ru/topic/edit/348286/
+https://habrahabr.ru/post/348286/
 
 
 > SOLID критикует тот, кто думает, что действительно понимает ООП
