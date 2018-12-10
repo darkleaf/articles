@@ -101,8 +101,8 @@ https://postgrespro.ru/docs/postgrespro/10/pgbouncer
 ```ruby
 posts = Post.all # select * from posts
 posts.each do |post|
-  like = post.likes.where(user_id: 1).order(:created_at).first
-  # SELECT * FROM likes WHERE user_id = ? ORDER by created_at LIMIT 1
+  like = post.likes.order(id: :desc).first
+  # SELECT * FROM likes WHERE post_id = ? ORDER BY id DESC LIMIT 1
   # ...
 end
 ```
@@ -113,11 +113,16 @@ ORM склоняет программиста к мысли, что он раб�
 
 ## Дополнительные данные
 
-Скажем, чтобы избежать проблемы N+1 вы пишете такой запрос:
+Скажем, чтобы избежать проблемы N+1 вы пишете такой
+[запрос](https://www.db-fiddle.com/f/6m5FACAHWCeRSmKrTXriVH/0):
 
 ```sql
-SELECT * FRON posts JOIN LATERAL ...
+SELECT * FROM posts JOIN LATERAL (
+  SELECT * FROM likes WHERE post_id = posts.id ORDER BY likes.id DESC LIMIT 1
+) as last_like ON true;
 ```
+
+
 
 Т.е. кроме атрибутов поста, выбирается еще и идентификатор лайка. На какой объект отобразить эти данные?
 
